@@ -8,13 +8,15 @@ public class DeviceControl : MonoBehaviour
     public GameObject brain;
     public Material transparentMaterial;
     public float rotationSpeed = 10;
+
     private Mesh brainMesh;
     private GameObject fluoroscopicImage;
 
     // Start is called before the first frame update
     void Start()
     {
-        brainMesh = brain.GetComponent<MeshFilter>().mesh;
+        brainMesh = brain.transform.GetChild(0).GetComponent<MeshFilter>().mesh;
+        //brainMesh = brain.transform.GetComponent<MeshFilter>().mesh;
 
         fluoroscopicImage = new GameObject();
         fluoroscopicImage.AddComponent<MeshFilter>();
@@ -48,7 +50,9 @@ public class DeviceControl : MonoBehaviour
     {
         Vector3 direction = Vector3.Normalize(transform.GetChild(0).transform.up);
 
-        Mesh fluoroscopyImage = new Mesh();
+        Mesh fluoroscopyMesh = new Mesh();
+
+        fluoroscopyMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 
         List<Vector3> imgVertices = new List<Vector3>();
         List<int> imgTriangles = new List<int>();
@@ -64,9 +68,12 @@ public class DeviceControl : MonoBehaviour
             imgVertices.Add(new Vector3(brainVertieces[brainTriangles[i + 1]].x, brainVertieces[brainTriangles[i + 1]].y, 0));
             imgVertices.Add(new Vector3(brainVertieces[brainTriangles[i + 2]].x, brainVertieces[brainTriangles[i + 2]].y, 0));
             */
-            imgVertices.Add( Vector3.Cross(brainVertieces[brainTriangles[i]], direction));
+            
+            
+            imgVertices.Add(Vector3.Cross(brainVertieces[brainTriangles[i]], direction));
             imgVertices.Add(Vector3.Cross(brainVertieces[brainTriangles[i+1]], direction));
             imgVertices.Add(Vector3.Cross(brainVertieces[brainTriangles[i+2]], direction));
+            
 
             imgTriangles.Add(i);
             imgTriangles.Add(i + 1);
@@ -79,10 +86,17 @@ public class DeviceControl : MonoBehaviour
             */
         }
 
-        fluoroscopyImage.vertices = imgVertices.ToArray();
-        fluoroscopyImage.triangles = imgTriangles.ToArray();
-        fluoroscopyImage.colors = imgColors.ToArray();
+        fluoroscopyMesh.vertices = imgVertices.ToArray();
+        fluoroscopyMesh.triangles = imgTriangles.ToArray();
+        fluoroscopyMesh.colors = imgColors.ToArray();
 
-        fluoroscopicImage.GetComponent<MeshFilter>().mesh = fluoroscopyImage;
+        fluoroscopicImage.GetComponent<MeshFilter>().mesh = fluoroscopyMesh;
+        fluoroscopicImage.transform.Rotate(new Vector3(0,0,90));
+        fluoroscopicImage.transform.position = Vector3.zero + new Vector3(5,0,10);
+    }
+
+    private float TriangleArea(Vector3 v1, Vector3 v2, Vector3 v3)
+    {
+        return Vector3.Distance(v1, v2) * Vector3.Distance(v3, v2) * Mathf.Sin(Vector3.Angle(v1-v2, v3-v2)) / 2;
     }
 }
